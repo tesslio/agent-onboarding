@@ -52,6 +52,18 @@ function commandExists(command) {
   return result !== null && result.trim().length > 0;
 }
 
+// Helper: Detect if running in headless environment
+function isHeadless() {
+  // Check common headless indicators
+  return (
+    !process.env.DISPLAY ||           // No X display
+    process.env.CI === 'true' ||       // CI environment
+    process.env.SSH_CONNECTION ||      // SSH session
+    process.env.SSH_CLIENT ||          // SSH client
+    !process.stdout.isTTY              // No TTY
+  );
+}
+
 // Helper: Retry with exponential backoff
 async function retry(fn, maxAttempts = 3) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -217,24 +229,59 @@ async function authenticate() {
     // Not authenticated, proceed with login
   }
 
+  const headless = isHeadless();
+
   log('  Starting login flow...', 'blue');
-  log('  (Browser will open, or use the URL below if no browser is available)', 'gray');
+  if (headless) {
+    log('  (Headless environment detected - authentication URL will be displayed)', 'gray');
+  } else {
+    log('  (Browser will open for authentication)', 'gray');
+  }
   console.log();
 
   // Start login - capture output to show URL/code
+  let loginOutput = '';
   try {
-    // Run tessl login and let output show (includes URL and code)
-    exec('tessl login');
+    // Capture output from tessl login
+    loginOutput = execSync('tessl login 2>&1', {
+      encoding: 'utf8',
+      stdio: 'pipe'
+    });
   } catch (error) {
-    // Login command may exit, but that's okay - it starts the flow
-    log('  Login flow initiated', 'gray');
+    // tessl login may exit non-zero, but that's okay - capture the output
+    loginOutput = error.stdout || error.stderr || '';
   }
 
-  console.log();
-  log('  Waiting for authentication...', 'gray');
-  log('  (Complete the browser flow or paste the URL manually)', 'gray');
+  // Parse and display URL and code from output
+  const urlMatch = loginOutput.match(/https?:\/\/[^\s]+/);
+  const codeMatch = loginOutput.match(/code[:\s]+([A-Z0-9-]+)/i);
 
-  const maxWait = 120000; // 2 minutes
+  if (urlMatch || codeMatch) {
+    console.log();
+    log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'blue');
+    if (urlMatch) {
+      log(`  Authentication URL:`, 'blue');
+      log(`  ${urlMatch[0]}`, 'green');
+    }
+    if (codeMatch) {
+      log(`  Code: ${codeMatch[1]}`, 'yellow');
+    }
+    log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'blue');
+    console.log();
+  } else {
+    log('  Login flow initiated', 'gray');
+    console.log();
+  }
+
+  log('  Waiting for authentication...', 'gray');
+  if (headless) {
+    log('  (Open the URL above in a browser and enter the code)', 'gray');
+  } else {
+    log('  (Complete the browser flow or use the URL above if needed)', 'gray');
+  }
+  console.log();
+
+  const maxWait = 180000; // 3 minutes (increased for manual entry)
   const pollInterval = 5000; // 5 seconds
   const startTime = Date.now();
 
