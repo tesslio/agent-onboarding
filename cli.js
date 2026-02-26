@@ -355,9 +355,21 @@ async function createExample() {
     path.join(examplePath, 'SKILL.md')
   );
 
-  // Generate tile.json
+  // Get username for workspace-scoped name
+  let username = 'user';
+  try {
+    const whoamiOutput = exec('tessl whoami', { silent: true });
+    const usernameMatch = whoamiOutput.match(/Username\s+([^\s]+)/);
+    if (usernameMatch) {
+      username = usernameMatch[1];
+    }
+  } catch (e) {
+    // Fall back to 'user' if can't get username
+  }
+
+  // Generate tile.json with workspace-scoped name
   const tileJson = {
-    name: 'skill-builder',
+    name: `${username}/skill-builder`,
     version: '0.1.0',
     summary: 'Scaffold new Tessl skills with best practices',
     description: 'Helps you scaffold new Tessl skills with best practices and proper structure',
@@ -474,8 +486,8 @@ Use skill-builder to create a skill called "code-formatter" that includes usage 
     }, null, 2) + '\n'
   );
 
-  // Import skill
-  exec(`cd ${examplePath} && tessl skill import && cd ../..`);
+  // Import skill (--force to skip prompts, --no-public to keep private)
+  exec(`cd ${examplePath} && tessl skill import --force --no-public && cd ../..`);
 
   log('  ✓ skill-builder example created with tile and scenarios', 'green');
 }
