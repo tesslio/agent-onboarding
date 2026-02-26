@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync, spawn } = require('child_process');
+const readline = require('readline');
 
 // Configuration
 const REGISTRY_URL = 'https://registry.tessl.io';
@@ -64,6 +65,25 @@ function isHeadless() {
   );
 }
 
+// Helper: Prompt user for input
+function promptUser(question, defaultValue = '') {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    const promptText = defaultValue
+      ? `${question} [${defaultValue}]: `
+      : `${question}: `;
+
+    rl.question(promptText, (answer) => {
+      rl.close();
+      resolve(answer.trim() || defaultValue);
+    });
+  });
+}
+
 // Helper: Retry with exponential backoff
 async function retry(fn, maxAttempts = 3) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -76,6 +96,24 @@ async function retry(fn, maxAttempts = 3) {
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
+}
+
+// Helper: Increment tile version
+function incrementTileVersion(tilePath) {
+  const tileJsonPath = path.join(tilePath, 'tile.json');
+  const tileJson = JSON.parse(fs.readFileSync(tileJsonPath, 'utf8'));
+
+  // Parse version (e.g., "0.1.0" -> [0, 1, 0])
+  const [major, minor, patch] = tileJson.version.split('.').map(Number);
+
+  // Increment patch version
+  const newVersion = `${major}.${minor}.${patch + 1}`;
+  tileJson.version = newVersion;
+
+  // Write back to file
+  fs.writeFileSync(tileJsonPath, JSON.stringify(tileJson, null, 2) + '\n');
+
+  return newVersion;
 }
 
 // Helper: Copy directory recursively
@@ -104,7 +142,7 @@ async function main() {
   console.log();
 
   const startTime = Date.now();
-  const totalSteps = 11;
+  const totalSteps = 12;
 
   // Step 0: Get permission
   progress(0, totalSteps, 'Getting permission...');
@@ -206,8 +244,13 @@ Total time: ~5 minutes. Safe and reversible.
     await generateOutputs(reviewResults, tileEvalResults, repoEvalResults, startTime);
     console.log();
 
-    // Step 11: Success!
-    progress(11, totalSteps, 'Complete!');
+    // Step 11: Publish tile
+    progress(11, totalSteps, 'Publishing skill-builder tile...');
+    await publishTile();
+    console.log();
+
+    // Step 12: Success!
+    progress(12, totalSteps, 'Complete!');
     displaySuccess();
 
   } catch (error) {
@@ -355,9 +398,25 @@ async function createExample() {
     path.join(examplePath, 'SKILL.md')
   );
 
-  // Generate tile.json
+  // Get username for workspace-scoped name
+  let username = 'user';
+  try {
+    const whoamiOutput = exec('tessl whoami', { silent: true });
+    const usernameMatch = whoamiOutput.match(/Username\s+([^\s]+)/);
+    if (usernameMatch) {
+      username = usernameMatch[1];
+    }
+  } catch (e) {
+    // Fall back to 'user' if can't get username
+  }
+
+  // Prompt for workspace (default to username)
+  log('\n  Which workspace should skill-builder use?', 'blue');
+  const workspace = await promptUser('  Workspace', username);
+
+  // Generate tile.json with workspace-scoped name
   const tileJson = {
-    name: 'skill-builder',
+    name: `${workspace}/skill-builder`,
     version: '0.1.0',
     summary: 'Scaffold new Tessl skills with best practices',
     description: 'Helps you scaffold new Tessl skills with best practices and proper structure',
@@ -474,8 +533,8 @@ Use skill-builder to create a skill called "code-formatter" that includes usage 
     }, null, 2) + '\n'
   );
 
-  // Import skill
-  exec(`cd ${examplePath} && tessl skill import && cd ../..`);
+  // Import skill (--force to skip prompts, --no-public to keep private)
+  exec(`cd ${examplePath} && tessl skill import --force --no-public && cd ../..`);
 
   log('  ✓ skill-builder example created with tile and scenarios', 'green');
 }
@@ -505,9 +564,37 @@ async function runSkillReview() {
 }
 
 async function runTileEval() {
-  // Start eval
-  const output = exec('tessl eval run examples/skill-builder --json', { silent: true });
-  const { evalRunId } = JSON.parse(output);
+  let evalRunId;
+  let retryCount = 0;
+  const maxRetries = 3;
+
+  // Try to start eval, increment version on conflict
+  while (retryCount < maxRetries) {
+    try {
+      const output = exec('tessl eval run examples/skill-builder --json', { silent: true });
+      const parsed = JSON.parse(output);
+      evalRunId = parsed.evalRunId;
+      break;
+    } catch (error) {
+      const errorMessage = error.message || '';
+
+      // Check if it's a version conflict
+      if (errorMessage.includes('version') && errorMessage.includes('already exists')) {
+        retryCount++;
+        const newVersion = incrementTileVersion('examples/skill-builder');
+        log(`  Version conflict detected, incrementing to ${newVersion}...`, 'yellow');
+
+        // Re-import with new version
+        exec('cd examples/skill-builder && tessl skill import --force --no-public && cd ../..', { silent: true });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  if (!evalRunId) {
+    throw new Error('Failed to start eval after version increments');
+  }
 
   log(`  Eval started: ${evalRunId}`, 'gray');
   log('  Polling for results...', 'gray');
@@ -573,6 +660,20 @@ async function runRepoEval() {
   } catch (error) {
     log('  ⚠ Repo eval skipped (optional)', 'yellow');
     return null;
+  }
+}
+
+async function publishTile() {
+  try {
+    // Publish the tile (private remains true in tile.json)
+    exec('cd examples/skill-builder && tessl skill publish && cd ../..', { silent: true });
+
+    const tileJson = JSON.parse(fs.readFileSync('examples/skill-builder/tile.json', 'utf8'));
+    log(`  ✓ Published ${tileJson.name}@${tileJson.version} (private)`, 'green');
+    log(`    (Tile is published to your workspace but remains private)`, 'gray');
+  } catch (error) {
+    log('  ⚠ Publishing skipped (non-fatal)', 'yellow');
+    log(`    Error: ${error.message}`, 'gray');
   }
 }
 
