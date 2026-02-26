@@ -572,8 +572,8 @@ Use skill-builder to create a skill called "code-formatter" that includes usage 
   }
   log(`  ✓ Verified tile.json exists at ${examplePath}/tile.json`, 'gray');
 
-  // Import skill (--force to skip prompts, --no-public to keep private)
-  exec(`cd ${examplePath} && tessl skill import --force --no-public && cd ../..`);
+  // Import skill (--force to skip prompts, --no-public to keep private, --workspace to set correct workspace)
+  exec(`cd ${examplePath} && tessl skill import --workspace ${workspace} --force --no-public && cd ../..`);
 
   log('  ✓ skill-builder example created with tile and scenarios', 'green');
 }
@@ -639,8 +639,12 @@ async function runTileEval() {
         const newVersion = incrementTileVersion('examples/skill-builder');
         log(`  Version conflict detected, incrementing to ${newVersion}...`, 'yellow');
 
-        // Re-import with new version
-        exec('cd examples/skill-builder && tessl skill import --force --no-public && cd ../..', { silent: true });
+        // Extract workspace from tile.json
+        const tileJsonContent = JSON.parse(fs.readFileSync('examples/skill-builder/tile.json', 'utf8'));
+        const workspace = tileJsonContent.name.split('/')[0];
+
+        // Re-import with new version (preserve workspace)
+        exec(`cd examples/skill-builder && tessl skill import --workspace ${workspace} --force --no-public && cd ../..`, { silent: true });
       } else {
         throw error;
       }
