@@ -728,17 +728,26 @@ async function runTileEval() {
     await new Promise(resolve => setTimeout(resolve, pollInterval));
 
     const statusOutput = exec(`tessl eval view ${evalRunId} --json`, { silent: true });
-    const status = JSON.parse(statusOutput);
+    const response = JSON.parse(statusOutput);
 
-    if (status.status === 'completed') {
-      const passed = status.scenarios.filter(s => s.passed).length;
-      const total = status.scenarios.length;
+    // Status is nested under data.attributes.status
+    const status = response.data.attributes.status;
+    const scenarios = response.data.attributes.scenarios;
+
+    log(`  Status: ${status}, Scenarios: ${scenarios?.length || 0}`, 'gray');
+
+    if (status === 'completed') {
+      // Calculate pass rate from scenarios
+      const passed = scenarios.filter(s => s.solutions?.some(sol =>
+        sol.assessmentResults?.every(r => r.score === r.max_score)
+      )).length;
+      const total = scenarios.length;
       const passRate = Math.round((passed / total) * 100);
 
       log(`  ✓ Eval complete: ${passed}/${total} scenarios passed (${passRate}%)`, 'green');
       log(`    (Evals test functional correctness)`, 'gray');
 
-      return status;
+      return response;
     }
   }
 
@@ -762,16 +771,22 @@ async function runRepoEval() {
       await new Promise(resolve => setTimeout(resolve, pollInterval));
 
       const statusOutput = exec(`tessl eval view ${evalRunId} --json`, { silent: true });
-      const status = JSON.parse(statusOutput);
+      const response = JSON.parse(statusOutput);
 
-      if (status.status === 'completed') {
-        const passed = status.scenarios.filter(s => s.passed).length;
-        const total = status.scenarios.length;
+      // Status is nested under data.attributes.status
+      const status = response.data.attributes.status;
+      const scenarios = response.data.attributes.scenarios;
+
+      if (status === 'completed') {
+        const passed = scenarios.filter(s => s.solutions?.some(sol =>
+          sol.assessmentResults?.every(r => r.score === r.max_score)
+        )).length;
+        const total = scenarios.length;
 
         log(`  ✓ Repo eval complete: ${passed}/${total} scenarios passed`, 'green');
         log(`    (Repo evals test integration)`, 'gray');
 
-        return status;
+        return response;
       }
     }
 
