@@ -135,6 +135,11 @@ function copyDir(src, dest) {
 
 // Main onboarding flow
 async function main() {
+  // Change to script directory so all relative paths work correctly
+  const scriptDir = path.dirname(__filename);
+  process.chdir(scriptDir);
+  log(`Working directory: ${scriptDir}`, 'gray');
+
   console.clear();
   log('╔════════════════════════════════════════╗', 'blue');
   log('║   Tessl Onboarding - Learn by Doing   ║', 'blue');
