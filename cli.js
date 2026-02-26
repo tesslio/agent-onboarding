@@ -457,6 +457,7 @@ async function createExample() {
     path.join(examplePath, 'tile.json'),
     JSON.stringify(tileJson, null, 2) + '\n'
   );
+  log(`  ✓ Generated tile.json for ${workspace}/skill-builder`, 'gray');
 
   // Create basic eval scenarios
   const scenario1Path = path.join(examplePath, 'evals/scenario-1');
@@ -552,6 +553,13 @@ Use skill-builder to create a skill called "code-formatter" that includes usage 
       ]
     }, null, 2) + '\n'
   );
+
+  // Verify tile.json was created
+  const tileJsonPath = path.join(examplePath, 'tile.json');
+  if (!fs.existsSync(tileJsonPath)) {
+    throw new Error(`Failed to create tile.json at ${tileJsonPath}`);
+  }
+  log(`  ✓ Verified tile.json exists at ${examplePath}/tile.json`, 'gray');
 
   // Import skill (--force to skip prompts, --no-public to keep private)
   exec(`cd ${examplePath} && tessl skill import --force --no-public && cd ../..`);
