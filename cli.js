@@ -628,7 +628,8 @@ async function createRepoEvals() {
 }
 
 async function runSkillReview() {
-  const output = exec('tessl skill review examples/skill-builder --json', { silent: true });
+  const tilePath = path.join(process.cwd(), 'examples/skill-builder');
+  const output = exec(`tessl skill review ${tilePath} --json`, { silent: true });
   const results = JSON.parse(output);
 
   log(`  ✓ Review complete: ${results.score}/100`, 'green');
@@ -661,7 +662,7 @@ async function runTileEval() {
   // Try to start eval, increment version on conflict
   while (retryCount < maxRetries) {
     try {
-      const output = exec('tessl eval run examples/skill-builder --json', { silent: true });
+      const output = exec(`tessl eval run ${tilePath} --json`, { silent: true });
       const parsed = JSON.parse(output);
       evalRunId = parsed.evalRunId;
       break;
@@ -671,15 +672,15 @@ async function runTileEval() {
       // Check if it's a version conflict
       if (errorMessage.includes('version') && errorMessage.includes('already exists')) {
         retryCount++;
-        const newVersion = incrementTileVersion('examples/skill-builder');
+        const newVersion = incrementTileVersion(tilePath);
         log(`  Version conflict detected, incrementing to ${newVersion}...`, 'yellow');
 
         // Extract workspace from tile.json
-        const tileJsonContent = JSON.parse(fs.readFileSync('examples/skill-builder/tile.json', 'utf8'));
+        const tileJsonContent = JSON.parse(fs.readFileSync(tileJsonPath, 'utf8'));
         const workspace = tileJsonContent.name.split('/')[0];
 
         // Re-import with new version (preserve workspace)
-        exec(`cd examples/skill-builder && tessl skill import --workspace ${workspace} --force --no-public && cd ../..`, { silent: true });
+        exec(`cd ${tilePath} && tessl skill import --workspace ${workspace} --force --no-public`, { silent: true });
       } else {
         throw error;
       }
@@ -759,10 +760,13 @@ async function runRepoEval() {
 
 async function publishTile() {
   try {
-    // Publish the tile (private remains true in tile.json)
-    exec('cd examples/skill-builder && tessl skill publish && cd ../..', { silent: true });
+    const tilePath = path.join(process.cwd(), 'examples/skill-builder');
+    const tileJsonPath = path.join(tilePath, 'tile.json');
 
-    const tileJson = JSON.parse(fs.readFileSync('examples/skill-builder/tile.json', 'utf8'));
+    // Publish the tile (private remains true in tile.json)
+    exec(`cd ${tilePath} && tessl skill publish`, { silent: true });
+
+    const tileJson = JSON.parse(fs.readFileSync(tileJsonPath, 'utf8'));
     log(`  ✓ Published ${tileJson.name}@${tileJson.version} (private)`, 'green');
     log(`    (Tile is published to your workspace but remains private)`, 'gray');
   } catch (error) {
