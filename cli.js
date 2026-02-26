@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync, spawn } = require('child_process');
+const readline = require('readline');
 
 // Configuration
 const REGISTRY_URL = 'https://registry.tessl.io';
@@ -62,6 +63,25 @@ function isHeadless() {
     process.env.SSH_CLIENT ||          // SSH client
     !process.stdout.isTTY              // No TTY
   );
+}
+
+// Helper: Prompt user for input
+function promptUser(question, defaultValue = '') {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    const promptText = defaultValue
+      ? `${question} [${defaultValue}]: `
+      : `${question}: `;
+
+    rl.question(promptText, (answer) => {
+      rl.close();
+      resolve(answer.trim() || defaultValue);
+    });
+  });
 }
 
 // Helper: Retry with exponential backoff
@@ -367,9 +387,13 @@ async function createExample() {
     // Fall back to 'user' if can't get username
   }
 
+  // Prompt for workspace (default to username)
+  log('\n  Which workspace should skill-builder use?', 'blue');
+  const workspace = await promptUser('  Workspace', username);
+
   // Generate tile.json with workspace-scoped name
   const tileJson = {
-    name: `${username}/skill-builder`,
+    name: `${workspace}/skill-builder`,
     version: '0.1.0',
     summary: 'Scaffold new Tessl skills with best practices',
     description: 'Helps you scaffold new Tessl skills with best practices and proper structure',
