@@ -486,10 +486,24 @@ async function createExample() {
     log(`  Continuing anyway - eval may fail if you lack access`, 'yellow');
   }
 
+  // Check if tile.json exists and preserve/increment version
+  let tileVersion = '0.1.0';
+  const existingTilePath = path.join(examplePath, 'tile.json');
+  if (fs.existsSync(existingTilePath)) {
+    try {
+      const existingTile = JSON.parse(fs.readFileSync(existingTilePath, 'utf8'));
+      const [major, minor, patch] = existingTile.version.split('.').map(Number);
+      tileVersion = `${major}.${minor}.${patch + 1}`;
+      log(`  ✓ Found existing tile at v${existingTile.version}, incrementing to v${tileVersion}`, 'gray');
+    } catch (e) {
+      log(`  ⚠ Could not read existing tile.json, starting at v0.1.0`, 'yellow');
+    }
+  }
+
   // Generate tile.json with workspace-scoped name
   const tileJson = {
     name: `${workspace}/skill-builder`,
-    version: '0.1.0',
+    version: tileVersion,
     summary: 'Scaffold new Tessl skills with best practices',
     description: 'Helps you scaffold new Tessl skills with best practices and proper structure',
     type: 'skill',
