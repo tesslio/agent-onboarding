@@ -1,0 +1,31 @@
+{
+  "context": "Test Cursor rules trigger recognition and prerequisite checking",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Trigger Recognition",
+      "description": "Recognizes 'set up Tessl' trigger phrase",
+      "max_score": 25
+    },
+    {
+      "name": "Overview",
+      "description": "Presents clear overview of onboarding steps",
+      "max_score": 20
+    },
+    {
+      "name": "Permission",
+      "description": "Asks for explicit user permission",
+      "max_score": 20
+    },
+    {
+      "name": "CLI Check",
+      "description": "Checks Tessl CLI installation status",
+      "max_score": 20
+    },
+    {
+      "name": "Network Check",
+      "description": "Verifies network connectivity to registry.tessl.io",
+      "max_score": 15
+    }
+  ]
+}

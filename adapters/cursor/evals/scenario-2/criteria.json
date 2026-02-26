@@ -1,0 +1,36 @@
+{
+  "context": "Test Cursor rules installation and authentication flow handling",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "CLI Installation",
+      "description": "Installs Tessl CLI when not present",
+      "max_score": 20
+    },
+    {
+      "name": "Version Check",
+      "description": "Verifies installation with version check",
+      "max_score": 15
+    },
+    {
+      "name": "Auth Check",
+      "description": "Checks authentication status before login",
+      "max_score": 15
+    },
+    {
+      "name": "Login Flow",
+      "description": "Initiates login flow when not authenticated",
+      "max_score": 20
+    },
+    {
+      "name": "Auth Polling",
+      "description": "Polls for authentication completion (5s intervals, 2min max)",
+      "max_score": 15
+    },
+    {
+      "name": "Username",
+      "description": "Reports authenticated username",
+      "max_score": 15
+    }
+  ]
+}

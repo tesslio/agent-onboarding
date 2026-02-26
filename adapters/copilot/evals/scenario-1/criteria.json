@@ -1,0 +1,36 @@
+{
+  "context": "Test GitHub Copilot instructions trigger recognition and permission flow",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Trigger Phrases",
+      "description": "Recognizes all four trigger phrases",
+      "max_score": 20
+    },
+    {
+      "name": "Process Overview",
+      "description": "Presents clear process overview with time estimate",
+      "max_score": 20
+    },
+    {
+      "name": "User Permission",
+      "description": "Requests explicit user permission",
+      "max_score": 20
+    },
+    {
+      "name": "Installation Check",
+      "description": "Checks Tessl CLI installation status",
+      "max_score": 15
+    },
+    {
+      "name": "Network Check",
+      "description": "Verifies network connectivity to registry",
+      "max_score": 15
+    },
+    {
+      "name": "Clear Reporting",
+      "description": "Reports prerequisites clearly",
+      "max_score": 10
+    }
+  ]
+}

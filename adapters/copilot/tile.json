@@ -1,0 +1,14 @@
+{
+  "name": "tessl-leo/tessl-onboarding-copilot",
+  "version": "1.0.0",
+  "summary": "Interactive Tessl onboarding for GitHub Copilot",
+  "description": "Install Tessl CLI, authenticate with registry, create skill-builder example, and run quality checks (review + evals). Complete onboarding in ~5 minutes with minimal user interaction.",
+  "type": "copilot-instructions",
+  "private": true,
+  "docs": ".github/copilot-instructions.md",
+  "metadata": {
+    "tags": ["onboarding", "setup", "copilot"],
+    "author": "Tessl",
+    "license": "MIT"
+  }
+}

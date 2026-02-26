@@ -1,0 +1,46 @@
+{
+  "context": "Test complete quality pipeline execution with proper timing and reporting",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Skill Review",
+      "description": "Runs tessl skill review successfully and reports score",
+      "max_score": 15
+    },
+    {
+      "name": "Eval Start",
+      "description": "Starts tessl eval run and captures eval run ID",
+      "max_score": 15
+    },
+    {
+      "name": "Initial Wait",
+      "description": "Waits 3 minutes before first status check",
+      "max_score": 10
+    },
+    {
+      "name": "Polling Interval",
+      "description": "Polls every 60 seconds until completion (not 15-second intervals)",
+      "max_score": 10
+    },
+    {
+      "name": "Eval Results",
+      "description": "Reports eval results with scenario pass/fail counts",
+      "max_score": 15
+    },
+    {
+      "name": "Summary File",
+      "description": "Generates onboarding-summary.md with clear next steps",
+      "max_score": 15
+    },
+    {
+      "name": "Report File",
+      "description": "Generates onboarding-report.md with detailed execution log",
+      "max_score": 10
+    },
+    {
+      "name": "Success Message",
+      "description": "Displays final success message",
+      "max_score": 10
+    }
+  ]
+}
