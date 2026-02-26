@@ -755,16 +755,104 @@ async function runTileEval() {
 }
 
 async function runRepoEval() {
-  // Start repo eval
+  // Ask if user wants to perform repo eval
+  log('\n  Would you like to perform a repository evaluation?', 'blue');
+  log('  This will analyze commits from a GitHub repository', 'gray');
+  const performEval = await promptUser('  Perform repo eval? (y/n)', 'n');
+
+  if (performEval.toLowerCase() !== 'y' && performEval.toLowerCase() !== 'yes') {
+    log('  ⚠ Repo eval skipped (user declined)', 'yellow');
+    return null;
+  }
+
   try {
-    const output = exec('tessl eval run --json', { silent: true });
-    const { evalRunId } = JSON.parse(output);
+    // Get GitHub repo URL
+    log('\n  Enter GitHub repository URL:', 'blue');
+    log('  Example: https://github.com/pandas-dev/pandas', 'gray');
+    const repoUrl = await promptUser('  GitHub URL', '');
 
-    log(`  Repo eval started: ${evalRunId}`, 'gray');
+    if (!repoUrl) {
+      log('  ⚠ No URL provided, skipping repo eval', 'yellow');
+      return null;
+    }
 
-    // Poll for completion (same as tile eval)
-    const maxWait = 300000;
-    const pollInterval = 15000;
+    // Parse URL to extract org/repo
+    // Handles: github.com/org/repo, www.github.com/org/repo, https://github.com/org/repo
+    const urlMatch = repoUrl.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/]+\/[^\/\s]+)/);
+    if (!urlMatch) {
+      log('  ✗ Invalid GitHub URL format', 'red');
+      log('  Expected format: github.com/org/repo', 'gray');
+      return null;
+    }
+
+    const orgRepo = urlMatch[1].replace(/\.git$/, ''); // Remove .git suffix if present
+    log(`  ✓ Parsed repository: ${orgRepo}`, 'gray');
+
+    // Select commits
+    log('\n  Selecting commits for evaluation...', 'blue');
+    const commitsOutput = exec(`tessl repo select-commits ${orgRepo}`, { silent: true });
+    const commits = commitsOutput.trim().split('\n').filter(c => c.length > 0);
+
+    if (commits.length === 0) {
+      log('  ✗ No commits found', 'red');
+      return null;
+    }
+
+    log(`  ✓ Found ${commits.length} commits`, 'gray');
+    log(`  Commits: ${commits.slice(0, 3).join(', ')}${commits.length > 3 ? '...' : ''}`, 'gray');
+
+    // Generate scenarios
+    log('\n  Generating evaluation scenarios...', 'blue');
+    const commitsArg = commits.join(',');
+    const scenariosOutput = exec(`tessl scenarios generate-scenarios ${orgRepo} --commits=${commitsArg}`);
+    log(`  ✓ Scenarios generated`, 'green');
+
+    // Get scenarios path (typically .tessl/evals)
+    const evalsPath = '.tessl/evals';
+
+    // Ask for agent and model
+    log('\n  Select agent and model for evaluation:', 'blue');
+    log('  Available agents:', 'gray');
+    log('    - claude: Claude Code (claude-sonnet-4-5, claude-opus-4-6, claude-haiku-4-5)', 'gray');
+    log('    - cursor: Cursor AI (claude-sonnet-4-5, gpt-4o, claude-opus-4-6)', 'gray');
+
+    const agent = await promptUser('  Agent', 'claude');
+
+    let modelOptions = [];
+    if (agent === 'claude') {
+      modelOptions = ['claude-sonnet-4-5', 'claude-opus-4-6', 'claude-haiku-4-5'];
+    } else if (agent === 'cursor') {
+      modelOptions = ['claude-sonnet-4-5', 'gpt-4o', 'claude-opus-4-6'];
+    } else {
+      // Default to claude options
+      modelOptions = ['claude-sonnet-4-5', 'claude-opus-4-6', 'claude-haiku-4-5'];
+    }
+
+    log(`  Available models: ${modelOptions.join(', ')}`, 'gray');
+    const model = await promptUser('  Model', modelOptions[0]);
+
+    log(`  ✓ Selected: ${agent}:${model}`, 'gray');
+
+    // Run eval with selected agent and model
+    log('\n  Starting repository evaluation...', 'blue');
+    const evalCommand = `tessl eval run ${evalsPath} --agent=${agent}:${model}`;
+    const output = exec(evalCommand, { silent: true });
+
+    // Parse eval run ID from text output
+    const idMatch = output.match(/eval-runs\/([a-f0-9-]+)|eval view ([a-f0-9-]+)/i);
+    let evalRunId;
+    if (idMatch) {
+      evalRunId = idMatch[1] || idMatch[2];
+      log(`  ✓ Eval started: ${evalRunId}`, 'gray');
+    } else {
+      log('  ✗ Could not extract eval run ID', 'red');
+      return null;
+    }
+
+    // Poll for completion
+    log('  Polling for results...', 'gray');
+    const maxWait = 600000; // 10 minutes for repo evals
+    const pollInterval = 15000; // 15 seconds
     const startTime = Date.now();
 
     while (Date.now() - startTime < maxWait) {
@@ -773,9 +861,10 @@ async function runRepoEval() {
       const statusOutput = exec(`tessl eval view ${evalRunId} --json`, { silent: true });
       const response = JSON.parse(statusOutput);
 
-      // Status is nested under data.attributes.status
       const status = response.data.attributes.status;
       const scenarios = response.data.attributes.scenarios;
+
+      log(`  Status: ${status}, Scenarios: ${scenarios?.length || 0}`, 'gray');
 
       if (status === 'completed') {
         const passed = scenarios.filter(s => s.solutions?.some(sol =>
@@ -784,16 +873,17 @@ async function runRepoEval() {
         const total = scenarios.length;
 
         log(`  ✓ Repo eval complete: ${passed}/${total} scenarios passed`, 'green');
-        log(`    (Repo evals test integration)`, 'gray');
+        log(`    (Repository: ${orgRepo}, Agent: ${agent}:${model})`, 'gray');
 
         return response;
       }
     }
 
-    log('  ⚠ Repo eval timeout (optional step)', 'yellow');
+    log('  ⚠ Repo eval timeout (check results later)', 'yellow');
+    log(`  Run: tessl eval view ${evalRunId}`, 'gray');
     return null;
   } catch (error) {
-    log('  ⚠ Repo eval skipped (optional)', 'yellow');
+    log(`  ⚠ Repo eval failed: ${error.message}`, 'yellow');
     return null;
   }
 }
