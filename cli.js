@@ -730,7 +730,7 @@ async function runTileEval() {
     const statusOutput = exec(`tessl eval view ${evalRunId} --json`, { silent: true });
     const status = JSON.parse(statusOutput);
 
-    if (status.status === 'complete') {
+    if (status.status === 'completed') {
       const passed = status.scenarios.filter(s => s.passed).length;
       const total = status.scenarios.length;
       const passRate = Math.round((passed / total) * 100);
@@ -764,7 +764,7 @@ async function runRepoEval() {
       const statusOutput = exec(`tessl eval view ${evalRunId} --json`, { silent: true });
       const status = JSON.parse(statusOutput);
 
-      if (status.status === 'complete') {
+      if (status.status === 'completed') {
         const passed = status.scenarios.filter(s => s.passed).length;
         const total = status.scenarios.length;
 
