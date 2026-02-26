@@ -239,67 +239,86 @@ async function authenticate() {
   }
   console.log();
 
-  // Start login - capture output to show URL/code
-  let loginOutput = '';
-  try {
-    // Capture output from tessl login
-    loginOutput = execSync('tessl login 2>&1', {
-      encoding: 'utf8',
-      stdio: 'pipe'
+  // Start login in background and capture output as it streams
+  return new Promise((resolve, reject) => {
+    const loginProcess = spawn('tessl', ['login'], {
+      stdio: ['inherit', 'pipe', 'pipe']
     });
-  } catch (error) {
-    // tessl login may exit non-zero, but that's okay - capture the output
-    loginOutput = error.stdout || error.stderr || '';
-  }
 
-  // Parse and display URL and code from output
-  const urlMatch = loginOutput.match(/https?:\/\/[^\s]+/);
-  const codeMatch = loginOutput.match(/code[:\s]+([A-Z0-9-]+)/i);
+    let output = '';
+    let urlDisplayed = false;
 
-  if (urlMatch || codeMatch) {
-    console.log();
-    log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'blue');
-    if (urlMatch) {
-      log(`  Authentication URL:`, 'blue');
-      log(`  ${urlMatch[0]}`, 'green');
-    }
-    if (codeMatch) {
-      log(`  Code: ${codeMatch[1]}`, 'yellow');
-    }
-    log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'blue');
-    console.log();
-  } else {
-    log('  Login flow initiated', 'gray');
-    console.log();
-  }
+    // Capture stdout and stderr
+    const captureOutput = (data) => {
+      const chunk = data.toString();
+      output += chunk;
 
-  log('  Waiting for authentication...', 'gray');
-  if (headless) {
-    log('  (Open the URL above in a browser and enter the code)', 'gray');
-  } else {
-    log('  (Complete the browser flow or use the URL above if needed)', 'gray');
-  }
-  console.log();
+      // Try to parse URL and code from accumulated output
+      if (!urlDisplayed) {
+        const urlMatch = output.match(/https?:\/\/[^\s]+/);
+        const codeMatch = output.match(/code[:\s]*\n\s*([A-Z0-9-]+)/i) ||
+                         output.match(/following code[:\s]*\n\s*([A-Z0-9-]+)/i);
 
-  const maxWait = 180000; // 3 minutes (increased for manual entry)
-  const pollInterval = 5000; // 5 seconds
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < maxWait) {
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-
-    try {
-      const whoami = exec('tessl whoami', { silent: true }).trim();
-      if (whoami) {
-        log(`  ✓ Authenticated as ${whoami}`, 'green');
-        return;
+        if (urlMatch || codeMatch) {
+          urlDisplayed = true;
+          console.log();
+          log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'blue');
+          if (urlMatch) {
+            log(`  Authentication URL:`, 'blue');
+            log(`  ${urlMatch[0]}`, 'green');
+          }
+          if (codeMatch) {
+            log(`  Code: ${codeMatch[1]}`, 'yellow');
+          }
+          log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'blue');
+          console.log();
+        }
       }
-    } catch {
-      // Not authenticated yet, continue polling
-    }
-  }
+    };
 
-  throw new Error('Authentication timeout - please try again');
+    loginProcess.stdout.on('data', captureOutput);
+    loginProcess.stderr.on('data', captureOutput);
+
+    loginProcess.on('close', async (code) => {
+      if (!urlDisplayed) {
+        log('  Login flow initiated', 'gray');
+        console.log();
+      }
+
+      log('  Waiting for authentication...', 'gray');
+      if (headless) {
+        log('  (Open the URL above in a browser and enter the code)', 'gray');
+      } else {
+        log('  (Complete the browser flow or use the URL above if needed)', 'gray');
+      }
+      console.log();
+
+      // Poll for authentication completion
+      const maxWait = 180000; // 3 minutes
+      const pollInterval = 5000; // 5 seconds
+      const startTime = Date.now();
+
+      while (Date.now() - startTime < maxWait) {
+        await new Promise(r => setTimeout(r, pollInterval));
+
+        try {
+          const whoami = exec('tessl whoami', { silent: true }).trim();
+          if (whoami) {
+            log(`  ✓ Authenticated as ${whoami}`, 'green');
+            return resolve();
+          }
+        } catch {
+          // Not authenticated yet, continue polling
+        }
+      }
+
+      reject(new Error('Authentication timeout - please try again'));
+    });
+
+    loginProcess.on('error', (err) => {
+      reject(new Error(`Failed to start login: ${err.message}`));
+    });
+  });
 }
 
 async function initProject() {
