@@ -149,6 +149,16 @@ Total time: ~5 minutes. Safe and reversible.
       await retry(() => {
         exec(`curl -fsSL ${INSTALL_URL} | sh`);
       });
+
+      // Add common install locations to PATH for this session
+      const homedir = require('os').homedir();
+      const tesslPaths = [
+        `${homedir}/.local/bin`,
+        `${homedir}/.tessl/bin`,
+        '/usr/local/bin'
+      ];
+      process.env.PATH = `${tesslPaths.join(':')}:${process.env.PATH}`;
+
       log('  ✓ Tessl CLI installed', 'green');
       console.log();
     } else {
