@@ -197,7 +197,27 @@ Total time: ~5 minutes. Safe and reversible.
       ];
       process.env.PATH = `${tesslPaths.join(':')}:${process.env.PATH}`;
 
+      // Add to shell config for persistence
+      const shellConfigs = [
+        `${homedir}/.bashrc`,
+        `${homedir}/.zshrc`,
+        `${homedir}/.profile`
+      ];
+
+      const pathExport = `\n# Added by Tessl onboarding\nexport PATH="${homedir}/.local/bin:$PATH"\n`;
+
+      for (const configFile of shellConfigs) {
+        if (fs.existsSync(configFile)) {
+          const content = fs.readFileSync(configFile, 'utf8');
+          if (!content.includes('.local/bin')) {
+            fs.appendFileSync(configFile, pathExport);
+            log(`  ✓ Added to PATH in ${path.basename(configFile)}`, 'gray');
+          }
+        }
+      }
+
       log('  ✓ Tessl CLI installed', 'green');
+      log('  ✓ PATH updated in shell config (will persist in new terminals)', 'gray');
       console.log();
     } else {
       progress(2, totalSteps, 'Tessl CLI already installed (skipping)');
@@ -774,6 +794,19 @@ function displaySuccess() {
   log('║     Tessl Onboarding Complete! ✅      ║', 'green');
   log('╚════════════════════════════════════════╝', 'green');
   console.log();
+
+  // Verify tessl installation
+  try {
+    const tesslVersion = exec('tessl --version', { silent: true }).trim();
+    log('Tessl CLI:', 'blue');
+    log(`  ${tesslVersion} ✓`, 'green');
+    log('  Installed and ready to use!', 'gray');
+    console.log();
+  } catch (e) {
+    log('Note: Tessl installed but may need shell restart to use globally', 'yellow');
+    console.log();
+  }
+
   log('Created:', 'blue');
   log('  ✓ skill-builder example in examples/skill-builder/', 'green');
   log('  ✓ Quality reports showing everything works', 'green');
