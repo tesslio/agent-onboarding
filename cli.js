@@ -603,6 +603,22 @@ async function runSkillReview() {
 }
 
 async function runTileEval() {
+  // Verify working directory and paths
+  const cwd = process.cwd();
+  const tilePath = path.join(cwd, 'examples/skill-builder');
+  const tileJsonPath = path.join(tilePath, 'tile.json');
+
+  log(`  Current working directory: ${cwd}`, 'gray');
+  log(`  Looking for tile at: ${tilePath}`, 'gray');
+  log(`  tile.json exists: ${fs.existsSync(tileJsonPath) ? '✓' : '✗'}`, fs.existsSync(tileJsonPath) ? 'green' : 'red');
+
+  if (!fs.existsSync(tileJsonPath)) {
+    log(`  ERROR: tile.json not found at expected location`, 'red');
+    log(`  Checking alternate locations...`, 'gray');
+    const altPath = '/examples/skill-builder/tile.json';
+    log(`  ${altPath}: ${fs.existsSync(altPath) ? '✓ FOUND' : '✗'}`, fs.existsSync(altPath) ? 'yellow' : 'gray');
+  }
+
   let evalRunId;
   let retryCount = 0;
   const maxRetries = 3;
