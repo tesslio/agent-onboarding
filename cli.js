@@ -440,23 +440,29 @@ async function createExample() {
       log(`  ⚠ Could not extract username from whoami, using default: ${username}`, 'yellow');
     }
 
-    // Extract workspaces (look for "Workspaces" section)
-    const workspacesSection = whoamiOutput.match(/Workspaces\s+([\s\S]*?)(?:\n\n|$)/);
-    if (workspacesSection) {
-      const workspaceLines = workspacesSection[1].split('\n').filter(line => line.trim());
-      availableWorkspaces = workspaceLines
-        .map(line => line.trim().split(/\s+/)[0])
-        .filter(ws => ws && ws.length > 0 && !ws.includes('─'));
+    // Get workspaces using tessl workspace list
+    try {
+      const workspaceListOutput = exec('tessl workspace list', { silent: true });
+      // Parse table format: extract lines with ║ that contain workspace names
+      const workspaceLines = workspaceListOutput.split('\n')
+        .filter(line => line.includes('║') && !line.includes('Name') && !line.includes('═') && !line.includes('─'))
+        .map(line => {
+          // Extract first column (workspace name) from table
+          const match = line.match(/║\s*([^\s│]+)\s*│/);
+          return match ? match[1].trim() : null;
+        })
+        .filter(ws => ws && ws.length > 0);
 
-      if (availableWorkspaces.length > 0) {
-        log(`  ✓ Found workspaces: ${availableWorkspaces.join(', ')}`, 'gray');
+      if (workspaceLines.length > 0) {
+        availableWorkspaces = workspaceLines;
+        log(`  ✓ Found ${availableWorkspaces.length} workspaces: ${availableWorkspaces.slice(0, 3).join(', ')}${availableWorkspaces.length > 3 ? '...' : ''}`, 'gray');
+      } else {
+        availableWorkspaces = [username];
+        log(`  ⚠ No workspaces found in list, using username as workspace`, 'yellow');
       }
-    }
-
-    // If no workspaces found, use username as fallback
-    if (availableWorkspaces.length === 0) {
+    } catch (e) {
       availableWorkspaces = [username];
-      log(`  ⚠ No workspaces found in whoami, using username as workspace`, 'yellow');
+      log(`  ⚠ Could not list workspaces: ${e.message}, using username as workspace`, 'yellow');
     }
   } catch (e) {
     log(`  ⚠ tessl whoami failed: ${e.message}, using default: ${username}`, 'yellow');
