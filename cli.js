@@ -669,7 +669,18 @@ async function runTileEval() {
   while (retryCount < maxRetries) {
     try {
       const output = exec(`tessl eval run ${tilePath} --json`, { silent: true });
-      const parsed = JSON.parse(output);
+      log(`  Raw eval output (first 300 chars): ${output.substring(0, 300)}`, 'gray');
+
+      // Try to parse JSON
+      let parsed;
+      try {
+        parsed = JSON.parse(output);
+      } catch (parseError) {
+        log(`  ✗ Failed to parse JSON response`, 'red');
+        log(`  Full output: ${output}`, 'yellow');
+        throw new Error(`Eval command succeeded but returned non-JSON output: ${output.substring(0, 200)}`);
+      }
+
       evalRunId = parsed.evalRunId;
       break;
     } catch (error) {
