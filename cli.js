@@ -427,17 +427,23 @@ async function createExample() {
   let username = 'user';
   try {
     const whoamiOutput = exec('tessl whoami', { silent: true });
+    log(`  tessl whoami output: ${whoamiOutput.substring(0, 200)}`, 'gray');
     const usernameMatch = whoamiOutput.match(/Username\s+([^\s]+)/);
     if (usernameMatch) {
       username = usernameMatch[1];
+      log(`  ✓ Extracted username: ${username}`, 'gray');
+    } else {
+      log(`  ⚠ Could not extract username from whoami, using default: ${username}`, 'yellow');
     }
   } catch (e) {
-    // Fall back to 'user' if can't get username
+    log(`  ⚠ tessl whoami failed: ${e.message}, using default: ${username}`, 'yellow');
   }
 
   // Prompt for workspace (default to username)
   log('\n  Which workspace should skill-builder use?', 'blue');
+  log(`  Default: ${username}`, 'gray');
   const workspace = await promptUser('  Workspace', username);
+  log(`  ✓ Selected workspace: ${workspace}`, 'gray');
 
   // Generate tile.json with workspace-scoped name
   const tileJson = {
