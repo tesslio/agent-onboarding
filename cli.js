@@ -423,11 +423,15 @@ async function createExample() {
     path.join(examplePath, 'SKILL.md')
   );
 
-  // Get username for workspace-scoped name
+  // Get username and available workspaces
   let username = 'user';
+  let availableWorkspaces = [];
+
   try {
     const whoamiOutput = exec('tessl whoami', { silent: true });
     log(`  tessl whoami output: ${whoamiOutput.substring(0, 200)}`, 'gray');
+
+    // Extract username
     const usernameMatch = whoamiOutput.match(/Username\s+([^\s]+)/);
     if (usernameMatch) {
       username = usernameMatch[1];
@@ -435,15 +439,46 @@ async function createExample() {
     } else {
       log(`  ⚠ Could not extract username from whoami, using default: ${username}`, 'yellow');
     }
+
+    // Extract workspaces (look for "Workspaces" section)
+    const workspacesSection = whoamiOutput.match(/Workspaces\s+([\s\S]*?)(?:\n\n|$)/);
+    if (workspacesSection) {
+      const workspaceLines = workspacesSection[1].split('\n').filter(line => line.trim());
+      availableWorkspaces = workspaceLines
+        .map(line => line.trim().split(/\s+/)[0])
+        .filter(ws => ws && ws.length > 0 && !ws.includes('─'));
+
+      if (availableWorkspaces.length > 0) {
+        log(`  ✓ Found workspaces: ${availableWorkspaces.join(', ')}`, 'gray');
+      }
+    }
+
+    // If no workspaces found, use username as fallback
+    if (availableWorkspaces.length === 0) {
+      availableWorkspaces = [username];
+      log(`  ⚠ No workspaces found in whoami, using username as workspace`, 'yellow');
+    }
   } catch (e) {
     log(`  ⚠ tessl whoami failed: ${e.message}, using default: ${username}`, 'yellow');
+    availableWorkspaces = [username];
   }
 
-  // Prompt for workspace (default to username)
+  // Prompt for workspace (default to first available workspace)
+  const defaultWorkspace = availableWorkspaces[0];
   log('\n  Which workspace should skill-builder use?', 'blue');
-  log(`  Default: ${username}`, 'gray');
-  const workspace = await promptUser('  Workspace', username);
+  if (availableWorkspaces.length > 1) {
+    log(`  Available: ${availableWorkspaces.join(', ')}`, 'gray');
+  }
+  log(`  Default: ${defaultWorkspace}`, 'gray');
+  const workspace = await promptUser('  Workspace', defaultWorkspace);
   log(`  ✓ Selected workspace: ${workspace}`, 'gray');
+
+  // Validate workspace
+  if (!availableWorkspaces.includes(workspace)) {
+    log(`  ⚠ Warning: "${workspace}" not found in available workspaces`, 'yellow');
+    log(`  Available: ${availableWorkspaces.join(', ')}`, 'yellow');
+    log(`  Continuing anyway - eval may fail if you lack access`, 'yellow');
+  }
 
   // Generate tile.json with workspace-scoped name
   const tileJson = {
