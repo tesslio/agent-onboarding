@@ -241,7 +241,7 @@ Total time: ~5 minutes. Safe and reversible.
 
     // Step 5: Create skill-builder example
     progress(5, totalSteps, 'Creating skill-builder example...');
-    await createExample();
+    const workspace = await createExample();
     console.log();
 
     // Step 6: Create repo eval scenarios
@@ -261,7 +261,7 @@ Total time: ~5 minutes. Safe and reversible.
 
     // Step 9: Run repo eval
     progress(9, totalSteps, 'Running repo eval (optional bonus)...');
-    const repoEvalResults = await runRepoEval();
+    const repoEvalResults = await runRepoEval(workspace);
     console.log();
 
     // Step 10: Generate outputs
@@ -617,6 +617,8 @@ Use skill-builder to create a skill called "code-formatter" that includes usage 
   exec(`cd ${examplePath} && tessl skill import --workspace ${workspace} --force --no-public && cd ../..`);
 
   log('  ✓ skill-builder example created with tile and scenarios', 'green');
+
+  return workspace; // Return workspace for use in repo eval
 }
 
 async function createRepoEvals() {
@@ -660,6 +662,16 @@ async function runTileEval() {
     const altPath = '/examples/skill-builder/tile.json';
     log(`  ${altPath}: ${fs.existsSync(altPath) ? '✓ FOUND' : '✗'}`, fs.existsSync(altPath) ? 'yellow' : 'gray');
   }
+
+  // Proactively increment version to ensure fresh eval (not reusing old results)
+  const newVersion = incrementTileVersion(tilePath);
+  log(`  ✓ Incremented tile version to ${newVersion}`, 'gray');
+
+  // Extract workspace from tile.json and re-import with new version
+  const tileJsonContent = JSON.parse(fs.readFileSync(tileJsonPath, 'utf8'));
+  const workspace = tileJsonContent.name.split('/')[0];
+  exec(`cd ${tilePath} && tessl skill import --workspace ${workspace} --force --no-public`, { silent: true });
+  log(`  ✓ Re-imported skill with new version`, 'gray');
 
   let evalRunId;
   let retryCount = 0;
@@ -754,7 +766,7 @@ async function runTileEval() {
   throw new Error('Eval timeout - check results later with tessl eval view');
 }
 
-async function runRepoEval() {
+async function runRepoEval(workspace) {
   // Ask if user wants to perform repo eval
   log('\n  Would you like to perform a repository evaluation?', 'blue');
   log('  This will analyze commits from a GitHub repository', 'gray');
@@ -790,7 +802,7 @@ async function runRepoEval() {
 
     // Select commits
     log('\n  Selecting commits for evaluation...', 'blue');
-    const commitsOutput = exec(`tessl repo select-commits ${orgRepo}`, { silent: true });
+    const commitsOutput = exec(`tessl repo select-commits ${orgRepo} --workspace ${workspace}`, { silent: true });
     const commits = commitsOutput.trim().split('\n').filter(c => c.length > 0);
 
     if (commits.length === 0) {
