@@ -136,15 +136,30 @@ cat tessl.json
 mkdir -p examples/skill-builder/evals
 ```
 
-**Copy skill-builder files:**
+**Copy skill-builder base files:**
 
-The skill-builder files (SKILL.md, tile.json, evals/scenarios.json) should be bundled with this skill. Copy them:
+The skill-builder files (SKILL.md, tile.json) should be bundled with this skill. Copy them:
 
 ```bash
 cp <skill-package-path>/examples/skill-builder/SKILL.md examples/skill-builder/
 cp <skill-package-path>/examples/skill-builder/tile.json examples/skill-builder/
-cp <skill-package-path>/examples/skill-builder/evals/scenarios.json examples/skill-builder/evals/
 ```
+
+**Generate eval scenarios using Tessl skills:**
+
+Use the Tessl built-in skill to create eval scenarios for skill-builder:
+
+```bash
+# Use tessl__creating-eval-scenarios skill to generate scenarios
+# This skill should be available in .claude/skills/ directory
+tessl skill run tessl__creating-eval-scenarios examples/skill-builder/
+```
+
+**Alternative (if Tessl skill not available):**
+
+Manually create 2-3 eval scenarios in `examples/skill-builder/evals/`:
+- Each scenario needs: `evals/scenario-N/task.md` and `evals/scenario-N/criteria.json`
+- Use weighted_checklist format for criteria
 
 **Import the skill:**
 
@@ -152,7 +167,7 @@ cp <skill-package-path>/examples/skill-builder/evals/scenarios.json examples/ski
 cd examples/skill-builder && tessl skill import && cd ../..
 ```
 
-**Report:** "✓ skill-builder example created"
+**Report:** "✓ skill-builder example created with eval scenarios"
 
 ### Step 7: Create Repo Eval Scenarios
 
@@ -161,12 +176,31 @@ cd examples/skill-builder && tessl skill import && cd ../..
 mkdir -p .tessl/evals
 ```
 
-**Copy repo scenarios:**
+**Generate repo-level scenarios:**
+
+Use Tessl built-in skill to create repo-level eval scenarios:
+
+```bash
+# Use tessl__creating-eval-scenarios for repo-level evals
+tessl skill run tessl__creating-eval-scenarios --repo-level ./
+```
+
+**Alternative (if Tessl skill not available):**
+
+Copy pre-made repo scenarios from the package:
 ```bash
 cp <skill-package-path>/.tessl/evals/repo-scenarios.json .tessl/evals/
 ```
 
 **Report:** "✓ Repo eval scenarios added"
+
+**Note on Tessl Skills Location:**
+
+The Tessl built-in skills (`tessl__creating-eval-scenarios`, `tessl__converting-skill-to-tessl-tile`) should be available in:
+- User's machine: `~/.claude/skills/` or `Documents/.claude/skills/`
+- NPX environment: `.claude/skills/` in the current working directory
+
+If these skills are not found, fall back to manual scenario creation or copying pre-made scenarios.
 
 ### Step 8: Run Skill Review
 
