@@ -1,0 +1,98 @@
+# Tessl Onboarding for Cursor
+
+When the user asks to "set up Tessl" or "onboard to Tessl", follow this process:
+
+## Overview
+
+This onboarding will:
+1. Install Tessl CLI (if needed)
+2. Authenticate with Tessl registry
+3. Create a working skill-builder example
+4. Run quality checks (review + eval)
+5. Generate summary and detailed report
+
+Time: ~5 minutes
+Interaction: Minimal (approval + browser auth)
+
+## Instructions
+
+Follow the complete guide in `TESSL_ONBOARDING.md` located at the repository root (or fetch from https://tessl.io/onboard.md if not present).
+
+## Execution Steps
+
+### Step 1: Get Permission
+Ask user: "I'll set up Tessl for you (install CLI, auth, create example, run checks). This takes ~5 minutes. Proceed?"
+
+### Step 2: Check Prerequisites
+Run: `which tessl` and `curl -I https://registry.tessl.io`
+Report: Tessl status and network connectivity
+
+### Step 3: Install Tessl (if needed)
+If not installed, run: `curl -fsSL https://get.tessl.io | sh`
+Verify: `tessl --version`
+
+### Step 4: Authenticate
+Check: `tessl whoami`
+If not authenticated, run: `tessl login`
+Wait for browser auth completion (poll `tessl whoami` every 5s, max 2 minutes)
+
+### Step 5: Initialize Project
+Check for `tessl.json`
+If missing, run: `tessl init`
+
+### Step 6: Create skill-builder Example
+Create directory: `examples/skill-builder/evals`
+Copy skill files (SKILL.md, tile.json, evals/scenarios.json) from the onboarding package
+Run: `cd examples/skill-builder && tessl skill import`
+
+### Step 7: Create Repo Eval Scenarios
+Create directory: `.tessl/evals`
+Copy `repo-scenarios.json` from onboarding package
+
+### Step 8: Run Skill Review
+Run: `tessl skill review examples/skill-builder --json`
+Parse results, report score
+
+### Step 9: Run Tile Eval
+Run: `tessl eval run examples/skill-builder --json`
+Capture eval ID
+Poll: `tessl eval view <id> --json` every 15s until complete
+Report pass/fail results
+
+### Step 10: Run Repo Eval (Optional)
+Run: `tessl eval run --json`
+Poll for results
+Report or skip if not applicable
+
+### Step 11: Generate Outputs
+Create `onboarding-summary.md` (human-friendly, 2-3 paragraphs)
+Create `onboarding-report.md` (detailed, agent-consumable)
+Report completion with file locations
+
+## Error Handling
+
+- **Installation fails**: Show error, provide manual install instructions
+- **Auth fails**: Retry once, show troubleshooting steps
+- **Network issues**: Retry with backoff (3 attempts)
+- **Low review/eval scores**: Continue anyway, note as educational
+- **Missing files**: Auto-create directories as needed
+
+## Success Output
+
+Present:
+```
+✅ Tessl onboarding complete!
+
+Created:
+- skill-builder example in examples/skill-builder/
+- Quality reports (review + evals passed)
+- Summary in onboarding-summary.md
+- Detailed report in onboarding-report.md
+
+Try: "Use skill-builder to create a skill for code review"
+```
+
+## Reference
+
+Full details: `TESSL_ONBOARDING.md` or https://tessl.io/onboard.md
+Tessl docs: https://docs.tessl.io

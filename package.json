@@ -1,0 +1,35 @@
+{
+  "name": "@tessl/onboard",
+  "version": "1.0.0",
+  "description": "Interactive Tessl onboarding - learn by doing",
+  "main": "cli.js",
+  "bin": {
+    "tessl-onboard": "./cli.js"
+  },
+  "keywords": [
+    "tessl",
+    "onboarding",
+    "skills",
+    "ai-agents"
+  ],
+  "author": "Tessl",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tessl/onboard"
+  },
+  "files": [
+    "cli.js",
+    "TESSL_ONBOARDING.md",
+    "examples/",
+    ".tessl/",
+    "outputs/"
+  ],
+  "scripts": {
+    "start": "node cli.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}

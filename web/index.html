@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tessl Onboarding</title>
+  <meta name="description" content="Learn Tessl by doing - interactive onboarding for AI agents and developers">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #f8f9fa;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    h1 {
+      color: #2c3e50;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .tagline {
+      color: #7f8c8d;
+      font-size: 1.2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .option {
+      background: #ecf0f1;
+      padding: 1.5rem;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .option h3 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+    .option code {
+      display: block;
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .agent-note {
+      background: #e8f4f8;
+      border-left: 4px solid #3498db;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tessl Onboarding</h1>
+    <p class="tagline">Learn by doing - interactive setup in 5 minutes</p>
+  </header>
+
+  <div class="card">
+    <h2>What You'll Get</h2>
+    <ul>
+      <li>Tessl CLI installed and configured</li>
+      <li>A working "skill-builder" example skill</li>
+      <li>Understanding of the full quality pipeline: review → eval</li>
+      <li>Ready to create and publish your own skills</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>How to Start</h2>
+    <div class="options">
+      <div class="option">
+        <h3>Claude Code</h3>
+        <p>Interactive onboarding in your IDE</p>
+        <code>/tessl-onboarding</code>
+      </div>
+      <div class="option">
+        <h3>NPX (Terminal)</h3>
+        <p>Quick setup from command line</p>
+        <code>npx @tessl/onboard</code>
+      </div>
+      <div class="option">
+        <h3>AI Agent</h3>
+        <p>Fetch the markdown guide</p>
+        <code><a href="/onboard.md">Get TESSL_ONBOARDING.md</a></code>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>What You'll Learn</h2>
+    <ul>
+      <li><strong>Skills</strong> - Tested, versioned agent capabilities</li>
+      <li><strong>Review</strong> - Structure and quality validation</li>
+      <li><strong>Evals</strong> - Functional correctness testing</li>
+      <li><strong>The Pipeline</strong> - Ensure production readiness</li>
+    </ul>
+  </div>
+
+  <div class="agent-note">
+    <strong>For AI Agents:</strong>
+    <p>This page serves <code>TESSL_ONBOARDING.md</code> at <code>/onboard.md</code> with proper headers for agent consumption. Fetch that file to get complete step-by-step instructions.</p>
+  </div>
+
+  <footer style="text-align: center; margin-top: 3rem; color: #7f8c8d;">
+    <p>Questions? Check the <a href="https://docs.tessl.io">docs</a> or join the community.</p>
+  </footer>
+</body>
+</html>

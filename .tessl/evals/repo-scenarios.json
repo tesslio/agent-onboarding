@@ -1,0 +1,51 @@
+{
+  "scenarios": [
+    {
+      "name": "onboarding-flow-complete",
+      "description": "Full onboarding flow completes successfully",
+      "tasks": [
+        "Verify Tessl is installed",
+        "Check authentication status",
+        "Validate skill-builder exists",
+        "Run skill review on skill-builder",
+        "Run tile eval on skill-builder"
+      ],
+      "expected": {
+        "all_tasks_complete": true,
+        "skill_review_score": ">=80",
+        "tile_eval_pass": true
+      }
+    },
+    {
+      "name": "skill-builder-generates-valid-skill",
+      "description": "Using skill-builder to create a new skill produces valid output",
+      "tasks": [
+        "Invoke skill-builder skill",
+        "Provide test input (create a greeting skill)",
+        "Validate generated SKILL.md is valid markdown",
+        "Validate generated tile.json is valid JSON",
+        "Run skill review on generated skill"
+      ],
+      "expected": {
+        "skill_file_valid": true,
+        "tile_file_valid": true,
+        "review_passes": true
+      }
+    },
+    {
+      "name": "onboarding-artifacts-usable",
+      "description": "Artifacts created during onboarding are immediately usable",
+      "tasks": [
+        "Use skill-builder to create a new skill",
+        "Import the new skill with tessl skill import",
+        "Run skill review on the new skill",
+        "Verify skill can be installed"
+      ],
+      "expected": {
+        "import_succeeds": true,
+        "review_score": ">=70",
+        "install_succeeds": true
+      }
+    }
+  ]
+}

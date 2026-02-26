@@ -1,0 +1,15 @@
+{
+  "name": "skill-builder",
+  "version": "0.1.0",
+  "description": "Helps you scaffold new Tessl skills with best practices and proper structure",
+  "type": "skill",
+  "private": true,
+  "files": {
+    "skill": "SKILL.md"
+  },
+  "metadata": {
+    "tags": ["scaffolding", "development", "meta"],
+    "author": "Tessl",
+    "license": "MIT"
+  }
+}

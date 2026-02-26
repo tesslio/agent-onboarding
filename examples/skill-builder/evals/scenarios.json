@@ -1,0 +1,57 @@
+{
+  "scenarios": [
+    {
+      "name": "basic-invocation",
+      "description": "Skill can be invoked and responds appropriately",
+      "input": "Help me create a skill for code review",
+      "expected": {
+        "asks_about_purpose": true,
+        "asks_about_audience": true,
+        "offers_to_generate_files": true
+      }
+    },
+    {
+      "name": "generates-valid-skill",
+      "description": "Generated SKILL.md is valid and well-structured",
+      "input": "Create a skill that validates API designs for REST APIs",
+      "expected": {
+        "has_frontmatter": true,
+        "has_name": true,
+        "has_description": true,
+        "has_usage_section": true,
+        "has_examples": true
+      }
+    },
+    {
+      "name": "generates-valid-metadata",
+      "description": "Generated tile.json is valid",
+      "input": "Create a skill for database migration planning",
+      "expected": {
+        "valid_json": true,
+        "has_name": true,
+        "has_version": true,
+        "has_description": true,
+        "has_type": "skill"
+      }
+    },
+    {
+      "name": "suggests-eval-scenarios",
+      "description": "Provides meaningful eval scenarios",
+      "input": "Build a skill that helps with test-driven development",
+      "expected": {
+        "suggests_scenarios": true,
+        "scenario_count": ">=3",
+        "scenarios_relevant": true
+      }
+    },
+    {
+      "name": "handles-unclear-request",
+      "description": "Asks clarifying questions when request is vague",
+      "input": "I want a skill",
+      "expected": {
+        "asks_clarifying_questions": true,
+        "does_not_generate_prematurely": true
+      }
+    }
+  ]
+}
