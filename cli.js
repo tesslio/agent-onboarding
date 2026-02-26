@@ -197,7 +197,27 @@ Total time: ~5 minutes. Safe and reversible.
       ];
       process.env.PATH = `${tesslPaths.join(':')}:${process.env.PATH}`;
 
+      // Add to shell config for persistence
+      const shellConfigs = [
+        `${homedir}/.bashrc`,
+        `${homedir}/.zshrc`,
+        `${homedir}/.profile`
+      ];
+
+      const pathExport = `\n# Added by Tessl onboarding\nexport PATH="${homedir}/.local/bin:$PATH"\n`;
+
+      for (const configFile of shellConfigs) {
+        if (fs.existsSync(configFile)) {
+          const content = fs.readFileSync(configFile, 'utf8');
+          if (!content.includes('.local/bin')) {
+            fs.appendFileSync(configFile, pathExport);
+            log(`  ✓ Added to PATH in ${path.basename(configFile)}`, 'gray');
+          }
+        }
+      }
+
       log('  ✓ Tessl CLI installed', 'green');
+      log('  ℹ Run "source ~/.bashrc" or restart shell to use tessl globally', 'blue');
       console.log();
     } else {
       progress(2, totalSteps, 'Tessl CLI already installed (skipping)');
@@ -398,21 +418,51 @@ async function createExample() {
     path.join(examplePath, 'SKILL.md')
   );
 
-  // Get username for workspace-scoped name
+  // Get username and available workspaces
   let username = 'user';
+  let availableWorkspaces = [];
+
   try {
     const whoamiOutput = exec('tessl whoami', { silent: true });
+
+    // Extract username
     const usernameMatch = whoamiOutput.match(/Username\s+([^\s]+)/);
     if (usernameMatch) {
       username = usernameMatch[1];
     }
+
+    // Extract workspaces (look for "Workspaces" section)
+    const workspacesSection = whoamiOutput.match(/Workspaces\s+([\s\S]*?)(?:\n\n|$)/);
+    if (workspacesSection) {
+      const workspaceLines = workspacesSection[1].split('\n').filter(line => line.trim());
+      availableWorkspaces = workspaceLines
+        .map(line => line.trim().split(/\s+/)[0])
+        .filter(ws => ws && ws.length > 0);
+    }
+
+    // If no workspaces found, assume username is a valid workspace
+    if (availableWorkspaces.length === 0) {
+      availableWorkspaces = [username];
+    }
   } catch (e) {
     // Fall back to 'user' if can't get username
+    availableWorkspaces = [username];
   }
 
   // Prompt for workspace (default to username)
   log('\n  Which workspace should skill-builder use?', 'blue');
-  const workspace = await promptUser('  Workspace', username);
+  if (availableWorkspaces.length > 1) {
+    log(`  Available workspaces: ${availableWorkspaces.join(', ')}`, 'gray');
+  }
+
+  let workspace = await promptUser('  Workspace', username);
+
+  // Validate workspace access
+  if (!availableWorkspaces.includes(workspace)) {
+    log(`  ⚠ Warning: "${workspace}" not found in your workspaces`, 'yellow');
+    log(`  Available: ${availableWorkspaces.join(', ')}`, 'gray');
+    log('  Continuing anyway - eval may fail if you lack access', 'yellow');
+  }
 
   // Generate tile.json with workspace-scoped name
   const tileJson = {
