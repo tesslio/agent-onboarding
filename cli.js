@@ -667,12 +667,6 @@ async function runTileEval() {
   const newVersion = incrementTileVersion(tilePath);
   log(`  ✓ Incremented tile version to ${newVersion}`, 'gray');
 
-  // Extract workspace from tile.json and re-import with new version
-  const tileJsonContent = JSON.parse(fs.readFileSync(tileJsonPath, 'utf8'));
-  const workspace = tileJsonContent.name.split('/')[0];
-  exec(`cd ${tilePath} && tessl skill import --workspace ${workspace} --force --no-public`, { silent: true });
-  log(`  ✓ Re-imported skill with new version`, 'gray');
-
   let evalRunId;
   let retryCount = 0;
   const maxRetries = 3;
@@ -711,13 +705,6 @@ async function runTileEval() {
         retryCount++;
         const newVersion = incrementTileVersion(tilePath);
         log(`  Version conflict detected, incrementing to ${newVersion}...`, 'yellow');
-
-        // Extract workspace from tile.json
-        const tileJsonContent = JSON.parse(fs.readFileSync(tileJsonPath, 'utf8'));
-        const workspace = tileJsonContent.name.split('/')[0];
-
-        // Re-import with new version (preserve workspace)
-        exec(`cd ${tilePath} && tessl skill import --workspace ${workspace} --force --no-public`, { silent: true });
       } else {
         throw error;
       }
