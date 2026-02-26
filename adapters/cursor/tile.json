@@ -1,0 +1,18 @@
+{
+  "name": "tessl-leo/tessl-onboarding-cursor",
+  "version": "1.0.0",
+  "summary": "Interactive Tessl onboarding for Cursor",
+  "description": "Install Tessl CLI, authenticate with registry, create skill-builder example, and run quality checks (review + evals). Complete onboarding in ~5 minutes with minimal user interaction.",
+  "type": "cursor-rules",
+  "private": true,
+  "rules": {
+    "tessl-onboarding": {
+      "rules": ".cursorrules"
+    }
+  },
+  "metadata": {
+    "tags": ["onboarding", "setup", "cursor"],
+    "author": "Tessl",
+    "license": "MIT"
+  }
+}

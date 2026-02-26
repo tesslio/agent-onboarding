@@ -1,0 +1,46 @@
+{
+  "context": "Test complete GitHub Copilot pipeline execution from setup through reports",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Project Setup",
+      "description": "Checks for tessl.json and initializes if needed",
+      "max_score": 10
+    },
+    {
+      "name": "Example Creation",
+      "description": "Creates complete skill-builder directory structure",
+      "max_score": 20
+    },
+    {
+      "name": "Skill Import",
+      "description": "Successfully imports skill-builder skill",
+      "max_score": 15
+    },
+    {
+      "name": "Repo Scenarios",
+      "description": "Creates .tessl/evals/ with repo scenarios",
+      "max_score": 10
+    },
+    {
+      "name": "Review Execution",
+      "description": "Runs skill review and reports score with JSON parsing",
+      "max_score": 15
+    },
+    {
+      "name": "Eval Polling",
+      "description": "Executes tile eval and polls every 15s for completion",
+      "max_score": 10
+    },
+    {
+      "name": "Report Files",
+      "description": "Generates both onboarding-summary.md and onboarding-report.md",
+      "max_score": 15
+    },
+    {
+      "name": "Completion Message",
+      "description": "Displays success message with actionable next steps",
+      "max_score": 5
+    }
+  ]
+}

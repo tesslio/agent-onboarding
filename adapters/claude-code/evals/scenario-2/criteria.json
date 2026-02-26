@@ -1,0 +1,31 @@
+{
+  "context": "Test skill-builder example creation with proper structure and file setup",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Project Config",
+      "description": "Creates tessl.json project configuration",
+      "max_score": 15
+    },
+    {
+      "name": "skill-builder Files",
+      "description": "Creates examples/skill-builder/ directory with all required files (SKILL.md, tile.json, evals/scenarios.json)",
+      "max_score": 30
+    },
+    {
+      "name": "Skill Import",
+      "description": "Successfully imports skill-builder skill",
+      "max_score": 25
+    },
+    {
+      "name": "Repo Evals",
+      "description": "Creates .tessl/evals/ directory with repo scenarios",
+      "max_score": 20
+    },
+    {
+      "name": "Progress Reporting",
+      "description": "Reports clear progress at each step",
+      "max_score": 10
+    }
+  ]
+}

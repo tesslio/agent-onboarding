@@ -1,0 +1,46 @@
+{
+  "context": "Test complete Cursor rules onboarding pipeline from setup through reports",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Project Init",
+      "description": "Initializes project with tessl init",
+      "max_score": 10
+    },
+    {
+      "name": "skill-builder Structure",
+      "description": "Creates complete skill-builder example structure",
+      "max_score": 20
+    },
+    {
+      "name": "Skill Import",
+      "description": "Imports skill-builder successfully",
+      "max_score": 15
+    },
+    {
+      "name": "Repo Evals Setup",
+      "description": "Sets up repo-level eval scenarios in .tessl/evals/",
+      "max_score": 10
+    },
+    {
+      "name": "Review Execution",
+      "description": "Runs skill review and reports score",
+      "max_score": 15
+    },
+    {
+      "name": "Eval Execution",
+      "description": "Executes tile eval with proper polling (15s intervals)",
+      "max_score": 10
+    },
+    {
+      "name": "Report Generation",
+      "description": "Generates both onboarding-summary.md and onboarding-report.md",
+      "max_score": 15
+    },
+    {
+      "name": "Success Message",
+      "description": "Displays final success message with next steps",
+      "max_score": 5
+    }
+  ]
+}

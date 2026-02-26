@@ -1,11 +1,14 @@
 {
-  "name": "skill-builder",
+  "name": "tessl-leo/skill-builder",
   "version": "0.1.0",
+  "summary": "Scaffold new Tessl skills with best practices",
   "description": "Helps you scaffold new Tessl skills with best practices and proper structure",
   "type": "skill",
   "private": true,
-  "files": {
-    "skill": "SKILL.md"
+  "skills": {
+    "skill-builder": {
+      "path": "SKILL.md"
+    }
   },
   "metadata": {
     "tags": ["scaffolding", "development", "meta"],

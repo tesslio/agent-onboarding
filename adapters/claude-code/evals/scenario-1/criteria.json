@@ -1,0 +1,26 @@
+{
+  "context": "Test installation and authentication flow for Tessl CLI onboarding",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "Installation Check",
+      "description": "Checks Tessl CLI installation status",
+      "max_score": 20
+    },
+    {
+      "name": "Auth Instructions",
+      "description": "Provides clear authentication instructions for both browser and headless scenarios",
+      "max_score": 30
+    },
+    {
+      "name": "Auth Flow Completion",
+      "description": "Successfully completes authentication flow",
+      "max_score": 30
+    },
+    {
+      "name": "Username Report",
+      "description": "Reports authenticated username",
+      "max_score": 20
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "context": "Test GitHub Copilot CLI installation and authentication handling",
+  "type": "weighted_checklist",
+  "checklist": [
+    {
+      "name": "CLI Installation",
+      "description": "Installs Tessl CLI when not present",
+      "max_score": 20
+    },
+    {
+      "name": "Version Verification",
+      "description": "Verifies installation succeeded with version check",
+      "max_score": 15
+    },
+    {
+      "name": "Auth Status Check",
+      "description": "Checks authentication status before login",
+      "max_score": 10
+    },
+    {
+      "name": "Browser Login",
+      "description": "Initiates browser login flow",
+      "max_score": 20
+    },
+    {
+      "name": "Polling Interval",
+      "description": "Polls every 5 seconds for auth completion",
+      "max_score": 15
+    },
+    {
+      "name": "Timeout",
+      "description": "Times out after 2 minutes max",
+      "max_score": 10
+    },
+    {
+      "name": "Username Report",
+      "description": "Reports authenticated username",
+      "max_score": 10
+    }
+  ]
+}
