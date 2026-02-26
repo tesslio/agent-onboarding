@@ -345,20 +345,139 @@ async function initProject() {
 async function createExample() {
   const examplePath = 'examples/skill-builder';
 
-  // Create directory
+  // Create directory structure
   fs.mkdirSync(path.join(examplePath, 'evals'), { recursive: true });
 
-  // Copy files from package
+  // Copy only SKILL.md from package
   const packagePath = path.dirname(__filename);
-  copyDir(
-    path.join(packagePath, 'examples/skill-builder'),
-    examplePath
+  fs.copyFileSync(
+    path.join(packagePath, 'examples/skill-builder/SKILL.md'),
+    path.join(examplePath, 'SKILL.md')
+  );
+
+  // Generate tile.json
+  const tileJson = {
+    name: 'skill-builder',
+    version: '0.1.0',
+    summary: 'Scaffold new Tessl skills with best practices',
+    description: 'Helps you scaffold new Tessl skills with best practices and proper structure',
+    type: 'skill',
+    private: true,
+    skills: {
+      'skill-builder': {
+        path: 'SKILL.md'
+      }
+    },
+    metadata: {
+      tags: ['scaffolding', 'development', 'meta'],
+      author: 'Tessl',
+      license: 'MIT'
+    }
+  };
+  fs.writeFileSync(
+    path.join(examplePath, 'tile.json'),
+    JSON.stringify(tileJson, null, 2) + '\n'
+  );
+
+  // Create basic eval scenarios
+  const scenario1Path = path.join(examplePath, 'evals/scenario-1');
+  const scenario2Path = path.join(examplePath, 'evals/scenario-2');
+  fs.mkdirSync(scenario1Path, { recursive: true });
+  fs.mkdirSync(scenario2Path, { recursive: true });
+
+  // Scenario 1: Basic scaffolding
+  fs.writeFileSync(
+    path.join(scenario1Path, 'task.md'),
+    `# Scenario 1: Basic Skill Scaffolding
+
+Test that skill-builder can create a basic skill structure.
+
+## Task
+Use skill-builder to create a new skill called "hello-world" that prints a greeting.
+
+## Expected Behavior
+- Creates skill directory with SKILL.md
+- Includes proper frontmatter (name, description)
+- Has clear usage instructions
+`
+  );
+
+  fs.writeFileSync(
+    path.join(scenario1Path, 'criteria.json'),
+    JSON.stringify({
+      context: 'Test basic skill scaffolding functionality',
+      type: 'weighted_checklist',
+      checklist: [
+        {
+          name: 'Directory Creation',
+          description: 'Creates skill directory with proper structure',
+          max_score: 25
+        },
+        {
+          name: 'SKILL.md File',
+          description: 'Generates SKILL.md with proper frontmatter',
+          max_score: 25
+        },
+        {
+          name: 'Name and Description',
+          description: 'Includes name and description in frontmatter',
+          max_score: 25
+        },
+        {
+          name: 'Usage Instructions',
+          description: 'Provides clear usage instructions in the skill',
+          max_score: 25
+        }
+      ]
+    }, null, 2) + '\n'
+  );
+
+  // Scenario 2: Skill with examples
+  fs.writeFileSync(
+    path.join(scenario2Path, 'task.md'),
+    `# Scenario 2: Skill with Examples
+
+Test that skill-builder can create a skill with usage examples.
+
+## Task
+Use skill-builder to create a skill called "code-formatter" that includes usage examples.
+
+## Expected Behavior
+- Creates skill with examples section
+- Examples are clear and functional
+- Follows Tessl skill best practices
+`
+  );
+
+  fs.writeFileSync(
+    path.join(scenario2Path, 'criteria.json'),
+    JSON.stringify({
+      context: 'Test skill creation with examples',
+      type: 'weighted_checklist',
+      checklist: [
+        {
+          name: 'Examples Section',
+          description: 'Includes a clear examples section',
+          max_score: 30
+        },
+        {
+          name: 'Example Quality',
+          description: 'Examples are clear and demonstrate usage',
+          max_score: 35
+        },
+        {
+          name: 'Best Practices',
+          description: 'Follows Tessl skill best practices',
+          max_score: 35
+        }
+      ]
+    }, null, 2) + '\n'
   );
 
   // Import skill
   exec(`cd ${examplePath} && tessl skill import && cd ../..`);
 
-  log('  ✓ skill-builder example created', 'green');
+  log('  ✓ skill-builder example created with tile and scenarios', 'green');
 }
 
 async function createRepoEvals() {
