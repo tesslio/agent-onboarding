@@ -812,7 +812,7 @@ async function runRepoEval() {
 
     // Ask for agent and model
     log('\n  Select agent and model for evaluation:', 'blue');
-    log('  Available agents:', 'gray');
+    log('  Available agents: (many more available)', 'gray');
     log('    - claude: Claude Code (claude-sonnet-4-5, claude-opus-4-6, claude-haiku-4-5)', 'gray');
     log('    - cursor: Cursor AI (claude-sonnet-4-5, gpt-4o, claude-opus-4-6)', 'gray');
 
