@@ -48,12 +48,8 @@ function exec(command, options = {}) {
 
 // Helper: Check if command exists
 function commandExists(command) {
-  try {
-    exec(`which ${command}`, { silent: true, ignoreErrors: true });
-    return true;
-  } catch {
-    return false;
-  }
+  const result = exec(`which ${command}`, { silent: true, ignoreErrors: true });
+  return result !== null && result.trim().length > 0;
 }
 
 // Helper: Retry with exponential backoff
