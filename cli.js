@@ -671,17 +671,25 @@ async function runTileEval() {
       const output = exec(`tessl eval run ${tilePath} --json`, { silent: true });
       log(`  Raw eval output (first 300 chars): ${output.substring(0, 300)}`, 'gray');
 
-      // Try to parse JSON
+      // Try to parse as JSON first
       let parsed;
       try {
         parsed = JSON.parse(output);
+        evalRunId = parsed.evalRunId;
       } catch (parseError) {
-        log(`  ✗ Failed to parse JSON response`, 'red');
-        log(`  Full output: ${output}`, 'yellow');
-        throw new Error(`Eval command succeeded but returned non-JSON output: ${output.substring(0, 200)}`);
+        // JSON parsing failed, try extracting ID from text output
+        // Format: "View results at: https://tessl.io/eval-runs/{id}" or "Run tessl eval view {id}"
+        const idMatch = output.match(/eval-runs\/([a-f0-9-]+)|eval view ([a-f0-9-]+)/i);
+        if (idMatch) {
+          evalRunId = idMatch[1] || idMatch[2];
+          log(`  ✓ Extracted eval run ID from text output: ${evalRunId}`, 'gray');
+        } else {
+          log(`  ✗ Could not extract eval run ID from output`, 'red');
+          log(`  Full output: ${output}`, 'yellow');
+          throw new Error(`Could not parse eval run ID from output: ${output.substring(0, 200)}`);
+        }
       }
 
-      evalRunId = parsed.evalRunId;
       break;
     } catch (error) {
       const errorMessage = error.message || '';
